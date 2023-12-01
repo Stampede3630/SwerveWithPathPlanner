@@ -43,13 +43,17 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    m_robotContainer.drivetrain.waitThenApplyNeutralModeCoast().schedule();
+  }
 
   @Override
   public void disabledPeriodic() {}
 
   @Override
-  public void disabledExit() {}
+  public void disabledExit() {
+    m_robotContainer.drivetrain.applyNeutralModeBrake().schedule();
+  }
 
   @Override
   public void autonomousInit() {
