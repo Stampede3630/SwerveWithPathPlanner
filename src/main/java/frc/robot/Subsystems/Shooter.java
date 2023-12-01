@@ -18,11 +18,11 @@ public class Shooter extends SubsystemBase {
   private TalonFXConfiguration shooterConfiguration;
 
   private DigitalInput leftLimitSwitch;
-  private DigitalInput rightLimitSwitch;
-  /** Creates a new Shooter. */
-  public Shooter() {
-    shooterConfiguration.
-  }TalonFXConfiguration
+  // private DigitalInput rightLimitSwitch;
+  // /** Creates a new Shooter. */
+  // public Shooter() {
+  //   shooterConfiguration.
+  // }TalonFXConfiguration
 
   @Override
   public void periodic() {
