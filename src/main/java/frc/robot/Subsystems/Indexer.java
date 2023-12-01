@@ -9,6 +9,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -33,11 +34,13 @@ public class Indexer extends SubsystemBase {
     // This method will be called once per scheduler run
   }
 
-  public Command indexersDefaultOff(){
-    return run(()->{
-      indexBottom.set(0);
-      indexTop.set(0);
-      });
+  public Command indexersDefault(){
+     return Commands.either(
+        setTopBottomIndexer(-.7, -.8)
+        .deadlineWith(Commands.waitSeconds(4))
+        .until(()->getTopLimitSwitch()),
+        setTopBottomIndexer(0, 0),
+        ()->getOnlyBottomSwitch());
   }
 
   public Command setTopIndexer(double inputSpeed){
@@ -62,7 +65,11 @@ public class Indexer extends SubsystemBase {
   public boolean getTopLimitSwitch() {
     return topLimitSwitch.get();
   }
-    public boolean getBothSwitches() {
+  public boolean getBothSwitches() {
     return topLimitSwitch.get() && bottomLimitSwitch.get();
+  }
+
+  public boolean getOnlyBottomSwitch() {
+    return !topLimitSwitch.get() && bottomLimitSwitch.get();
   }
 }

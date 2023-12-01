@@ -53,14 +53,14 @@ public class RobotContainer {
             .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
         ).ignoringDisable(true));                   // Calculates requests during disabled
     intake.setDefaultCommand(intake.intakeDefaultOff());
-    indexer.setDefaultCommand(indexer.indexersDefaultOff());
+    indexer.setDefaultCommand(indexer.indexersDefault());
 
     //REVERSEINTAKE
     joystick.b().debounce(.2, DebounceType.kFalling)
       .whileTrue(
       Commands.parallel(
-          intake.setIntakeSpeed(-.8).andThen(intake.extendIntake()),
-        indexer.setTopBottomIndexer(-.8, -.7))
+        intake.cExtendAndIntake(-.8),
+        indexer.setTopBottomIndexer(.8, .7))
         );
 
     //INTAKE
@@ -74,7 +74,7 @@ public class RobotContainer {
     .onFalse(
         intake.intakeDefaultOff()
         .andThen(Commands.waitSeconds(.2))
-        .andThen(indexer.indexersDefaultOff()));
+        .andThen(indexer.indexersDefault()));
 
 
     

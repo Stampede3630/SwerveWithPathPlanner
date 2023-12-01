@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -38,6 +39,10 @@ public class Intake extends SubsystemBase {
       intakeDrive.set(0);
       intakeSolenoid.set(Value.kReverse);
     });
+  }
+
+  public Command cExtendAndIntake(double inputSpeed){
+    return Commands.sequence(extendIntake(),setIntakeSpeed(inputSpeed));
   }
 
   public Command setIntakeSpeed(double inputSpeed){
