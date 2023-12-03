@@ -18,15 +18,12 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class Intake extends SubsystemBase {
-  private TalonFX intakeDrive;
-
-  private DoubleSolenoid intakeSolenoid;
-  TalonFXConfiguration intakeDriveConfig = new TalonFXConfiguration();
+  private final TalonFX intakeDrive = new TalonFX(Constants.IntakeMotorID);
+  private final DoubleSolenoid intakeSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH, Constants.IntakeSolenoidForwardID, Constants.IntakeSolenoidReverseID);
   
   /** Creates a new Intake. */
   public Intake() {
-    intakeSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH, Constants.IntakeSolenoidForwardID, Constants.IntakeSolenoidReverseID);
-    intakeDrive = new TalonFX(Constants.IntakeMotorID);
+
   }
 
   @Override
@@ -34,24 +31,25 @@ public class Intake extends SubsystemBase {
     // This method will be called once per scheduler run
   }
 
-  public Command intakeDefaultOff() {
+  public Command cDefault() {
     return run(()->{
       intakeDrive.set(0);
       intakeSolenoid.set(Value.kReverse);
     });
   }
 
-  public Command cExtendAndIntake(double inputSpeed){
-    return Commands.sequence(extendIntake(),setIntakeSpeed(inputSpeed));
+  public Command cExtendAndSetSpeed(double inputSpeed){
+    return Commands.sequence(cExtend(),
+    cSetIntakeSpeed(inputSpeed));
   }
 
-  public Command setIntakeSpeed(double inputSpeed){
+  public Command cSetIntakeSpeed(double inputSpeed){
     return run(()->{
       intakeDrive.set(inputSpeed);
     });
   }
 
-  public Command extendIntake(){
+  public Command cExtend(){
     return runOnce(()->{
       intakeSolenoid.set(Value.kForward);
     });
