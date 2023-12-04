@@ -9,8 +9,8 @@ public class Constants {
     public static final int IntakeMotorID = 13;
     public static final int IntakeSolenoidForwardID = 4;
     public static final int IntakeSolenoidReverseID = 5;
-    public static final int BottomIntakeSwitchID = 0;
-    public static final int TopIntakeSwitchID = 1;
+    public static final int BottomIntakeSwitchID = 1;
+    public static final int TopIntakeSwitchID = 0;
 
     // Shooter IDs
     public static final int ShooterMotorID = 10;

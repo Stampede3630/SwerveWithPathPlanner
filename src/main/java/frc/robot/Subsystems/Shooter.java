@@ -17,6 +17,7 @@ import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -26,8 +27,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import monologue.Logged;
+import monologue.Monologue.LogNT;
 
-public class Shooter extends SubsystemBase {
+public class Shooter extends SubsystemBase implements Logged {
   private final TalonFX hoodMotor = new TalonFX(Constants.HoodMotorID, "rio");
   private final TalonFXConfiguration hoodConfiguration = new TalonFXConfiguration()
     .withMotorOutput(new MotorOutputConfigs()
@@ -43,15 +46,12 @@ public class Shooter extends SubsystemBase {
       .withNeutralMode(NeutralModeValue.Coast)
       .withInverted(InvertedValue.CounterClockwise_Positive))
     .withSlot0(new Slot0Configs()
-      .withKP(5)     // An error of 1 rotation per second results in 5 amps output
-      .withKI(.1)    // An error of 1 rotation per second increases output by 0.1 amps every second
-      .withKD(.001)) // A change of 1000 rotation per second squared results in 1 amp output
-    .withTorqueCurrent(new TorqueCurrentConfigs()
-      .withPeakForwardTorqueCurrent(80)
-      .withPeakReverseTorqueCurrent(0));
+      .withKP(.11)     // An error of 1 rotation per second results in 5 amps output
+      .withKI(.5)    // An error of 1 rotation per second increases output by 0.1 amps every second
+      .withKD(.0001)
+      .withKV(.12)); // A change of 1000 rotation per second squared results in 1 amp output
   /* Torque-based velocity does not require a feed forward, as torque will accelerate the rotor up to the desired velocity by itself */
-  private VelocityTorqueCurrentFOC shooterTorqueDrive = new VelocityTorqueCurrentFOC(0,0,0,0,true);
-
+  private final VelocityVoltage shooterVelocityDrive = new VelocityVoltage(0, 0, false, 0, 0,false);
   private final DigitalInput leftLimitSwitch = new DigitalInput(Constants.LeftHoodSwitchID);
   private DigitalInput rightLimitSwitch = new DigitalInput(Constants.RightHoodSwitchID);
   /** Creates a new Shooter. */
@@ -80,9 +80,14 @@ public class Shooter extends SubsystemBase {
   }
 
   public Command setShooterRPS(DoubleSupplier shooterRPS){
-    return run(()->shooterTorqueDrive.withVelocity(shooterRPS.getAsDouble()));
+    return runOnce(()->shooterMotor.setControl(shooterVelocityDrive.withVelocity(shooterRPS.getAsDouble())));
   }
-  
+
+  public Command cCoastShooter(){
+    return runOnce(()->shooterMotor.set(0));
+  }
+
+  @LogNT
   public boolean getShooterAtSpeed(){
     return shooterMotor.getClosedLoopReference().getValueAsDouble()*0.95 <= shooterMotor.getVelocity().getValueAsDouble();
   }

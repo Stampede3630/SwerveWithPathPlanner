@@ -19,10 +19,11 @@ import frc.robot.Subsystems.Indexer;
 import frc.robot.Subsystems.Intake;
 import frc.robot.Subsystems.Shooter;
 import frc.robot.generated.TunerConstants;
+import monologue.Logged;
 
-public class RobotContainer {
+public class RobotContainer implements Logged {
   final DigitalInput topLimitSwitch = new DigitalInput(Constants.TopIntakeSwitchID);
-  final Trigger topLimitSwitchTrigger = new Trigger(()->topLimitSwitch.get());
+  final Trigger topLimitSwitchTrigger = new Trigger(()->!topLimitSwitch.get());
   final Intake intake = new Intake();
   final Indexer indexer = new Indexer(topLimitSwitchTrigger);
   final Shooter shooter = new Shooter();
@@ -67,13 +68,13 @@ public class RobotContainer {
     intake.setDefaultCommand(intake.cDefault());
     indexer.setDefaultCommand(indexer.cDefault());
     
-    shooter.setDefaultCommand(
-      Commands.either(shooter.setShooterRPS(()->{return 50;}), 
-      shooter.setShooterRPS(()->{return 0;}), 
-      topLimitSwitchTrigger));
+    shooter.setDefaultCommand(Commands.either(
+      shooter.setShooterRPS(()->40),
+      shooter.cCoastShooter(),
+      topLimitSwitchTrigger).repeatedly());
 
     //REVERSEINTAKE
-    joystick.b().debounce(.2, DebounceType.kFalling)
+    joystick.b().debounce(.2)
       .whileTrue(
       Commands.parallel(
         intake.cExtendAndSetSpeed(-.8),
@@ -81,26 +82,27 @@ public class RobotContainer {
         );
 
     //INTAKE
-    joystick.rightTrigger(.5).debounce(.2,DebounceType.kFalling)
-      .onTrue(
+    joystick.rightTrigger(.5).debounce(.2)
+      .whileTrue(
         Commands.parallel(
           intake.cExtendAndSetSpeed(.8),
           indexer.setTopBottomIndexer(-.35, -.35).until(topLimitSwitchTrigger)
           )
-      ).onFalse(
-          intake.cSetNone()
-          .andThen(Commands.waitSeconds(.2))
-          .andThen(indexer.cSetNone()));
+      );
 
     //SHOOT
-    joystick.rightTrigger(.5).debounce(.2,DebounceType.kFalling)
+    joystick.leftTrigger(.5).debounce(.2)
       .whileTrue(
         Commands.sequence(
-          shooter.setShooterRPS(()->{return 80;}),
+          Commands.print("I'm shooting!"),
+          shooter.setShooterRPS(()->{return 60;}),
+
           Commands.either(
             indexer.setTopBottomIndexer(-.7, -.8),
-            Commands.none(),
-            shooter::getShooterAtSpeed)));
+            indexer.setTopBottomIndexer(0, 0),
+            shooter::getShooterAtSpeed)).repeatedly()
+          )
+      .whileFalse(shooter.cCoastShooter());
    
     joystick.x().debounce(.2, DebounceType.kFalling).whileTrue(drivetrain
         .applyRequest(() -> requestPointWheelsAt.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))));

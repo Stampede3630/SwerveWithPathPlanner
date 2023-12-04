@@ -14,8 +14,10 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
+import monologue.Logged;
+import monologue.Monologue.LogNT;
 
-public class Indexer extends SubsystemBase {
+public class Indexer extends SubsystemBase implements Logged{
   private final TalonFX bottomMotor = new TalonFX(Constants.IndexBottomMotorID);
   private final TalonFX indexTop = new TalonFX(Constants.IndexTopMotorID);
   private Trigger topLimitSwitchTrigger;  
@@ -34,23 +36,23 @@ public class Indexer extends SubsystemBase {
 
   public Command cDefault(){
      return Commands.either(
-        setTopBottomIndexer(-.7, -.8)
-        .deadlineWith(Commands.waitSeconds(4))
+      Commands.print("I'm default indexing").andThen(
+        setTopBottomIndexer(-.7, -.8))
         .until(()->getTopLimitSwitch()),
         setTopBottomIndexer(0, 0),
-        ()->getOnlyBottomSwitch());
+        ()->getOnlyBottomSwitch()).repeatedly();
   }
 
   public Command setTopIndexer(double inputSpeed){
-    return run(()->indexTop.set(inputSpeed));
+    return runOnce(()->indexTop.set(inputSpeed));
   }
 
   public Command setBottomIndexer(double inputSpeed){
-    return run(()->bottomMotor.set(inputSpeed));
+    return runOnce(()->bottomMotor.set(inputSpeed));
   }
 
   public Command setTopBottomIndexer(double topSpeed, double bottomSpeed){
-    return run(()->{
+    return runOnce(()->{
       indexTop.set(topSpeed);
       bottomMotor.set(bottomSpeed);
     });
@@ -59,19 +61,20 @@ public class Indexer extends SubsystemBase {
   public Command cSetNone(){
     return Commands.none();
   }
-
+  @LogNT
   public boolean getBottomLimitSwitch() {
-    return bottomLimitSwitch.get();
+    return !bottomLimitSwitch.get();
   }
-
+  @LogNT
   public boolean getTopLimitSwitch() {
     return topLimitSwitchTrigger.getAsBoolean();
   }
+  @LogNT
   public boolean getBothSwitches() {
-    return getTopLimitSwitch() && bottomLimitSwitch.get();
+    return getTopLimitSwitch() && getBottomLimitSwitch();
   }
-
+  @LogNT
   public boolean getOnlyBottomSwitch() {
-    return !getTopLimitSwitch() && bottomLimitSwitch.get();
+    return !getTopLimitSwitch() && getBottomLimitSwitch();
   }
 }

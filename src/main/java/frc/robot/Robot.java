@@ -12,8 +12,10 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import monologue.Logged;
+import monologue.Monologue;
 
-public class Robot extends TimedRobot {
+public class Robot extends TimedRobot implements Logged {
   private Command m_autonomousCommand;
 
   private RobotContainer m_robotContainer;
@@ -23,9 +25,9 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     m_robotContainer = new RobotContainer();
-
+    Monologue.setupLogging(this, "/Robot");
     m_robotContainer.drivetrain.getDaqThread().setThreadPriority(99);
-
+    SignalLogger.setPath("/media/sda1/");
     SignalLogger.start();
   }
   @Override
@@ -40,6 +42,7 @@ public class Robot extends TimedRobot {
         m_robotContainer.drivetrain.addVisionMeasurement(llPose, Timer.getFPGATimestamp());
       }
     }
+    Monologue.update();
   }
 
   @Override

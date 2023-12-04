@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import monologue.Logged;
 
 public class Intake extends SubsystemBase {
   private final TalonFX intakeDrive = new TalonFX(Constants.IntakeMotorID);
@@ -42,6 +43,7 @@ public class Intake extends SubsystemBase {
     return Commands.sequence(cExtend(),
     cSetIntakeSpeed(inputSpeed));
   }
+
 
   public Command cSetIntakeSpeed(double inputSpeed){
     return run(()->{
