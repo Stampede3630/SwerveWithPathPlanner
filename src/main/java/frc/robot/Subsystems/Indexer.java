@@ -56,6 +56,10 @@ public class Indexer extends SubsystemBase {
     });
   }
 
+  public Command cSetNone(){
+    return Commands.none();
+  }
+
   public boolean getBottomLimitSwitch() {
     return bottomLimitSwitch.get();
   }

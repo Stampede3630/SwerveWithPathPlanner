@@ -54,6 +54,10 @@ public class Intake extends SubsystemBase {
       intakeSolenoid.set(Value.kForward);
     });
   }
+  
+  public Command cSetNone(){
+    return Commands.none();
+  }
 }
 
 

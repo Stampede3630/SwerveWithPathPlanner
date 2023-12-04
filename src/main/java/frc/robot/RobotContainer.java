@@ -82,19 +82,27 @@ public class RobotContainer {
 
     //INTAKE
     joystick.rightTrigger(.5).debounce(.2,DebounceType.kFalling)
-    .onTrue(
-      Commands.parallel(
-        intake.cExtendAndSetSpeed(.8),
-        indexer.setTopBottomIndexer(-.35, -.35).until(topLimitSwitchTrigger)
-        )
-    ).onFalse(
-        intake.runOnce(Commands.none())
-        .andThen(Commands.waitSeconds(.2))
-        .andThen(indexer.cDefault()));
+      .onTrue(
+        Commands.parallel(
+          intake.cExtendAndSetSpeed(.8),
+          indexer.setTopBottomIndexer(-.35, -.35).until(topLimitSwitchTrigger)
+          )
+      ).onFalse(
+          intake.cSetNone()
+          .andThen(Commands.waitSeconds(.2))
+          .andThen(indexer.cSetNone()));
 
-
-    
-    joystick.b().whileTrue(drivetrain
+    //SHOOT
+    joystick.rightTrigger(.5).debounce(.2,DebounceType.kFalling)
+      .whileTrue(
+        Commands.sequence(
+          shooter.setShooterRPS(()->{return 80;}),
+          Commands.either(
+            indexer.setTopBottomIndexer(-.7, -.8),
+            Commands.none(),
+            shooter::getShooterAtSpeed)));
+   
+    joystick.x().debounce(.2, DebounceType.kFalling).whileTrue(drivetrain
         .applyRequest(() -> requestPointWheelsAt.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))));
 
     // reset the field-centric heading on left bumper press
