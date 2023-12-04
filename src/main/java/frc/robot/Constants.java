@@ -4,9 +4,9 @@ public class Constants {
     public static final double XBOXDEADBAND = .1;
     
     // Index and Intake IDs
-    public static final int IndexBottomMotorID = 6;
+    public static final int IndexBottomMotorID = 43;
     public static final int IndexTopMotorID = 9;
-    public static final int IntakeMotorID = 7;
+    public static final int IntakeMotorID = 13;
     public static final int IntakeSolenoidForwardID = 4;
     public static final int IntakeSolenoidReverseID = 5;
     public static final int BottomIntakeSwitchID = 0;
@@ -19,7 +19,7 @@ public class Constants {
     public static final int RightHoodSwitchID = 5;
 
     // Climber IDs
-    public static final int ClimberMotorId = 8;
+    public static final int ClimberMotorId = 40;
     public static final int ClimberSolenoidForwardID = 2;
     public static final int ClimberSolenoidReverseID = 3;
     public static final int LeftClimberSwitchID = 2;
