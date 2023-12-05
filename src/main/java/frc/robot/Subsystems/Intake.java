@@ -5,6 +5,7 @@
 package frc.robot.Subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -32,7 +33,7 @@ public class Intake extends SubsystemBase {
     // This method will be called once per scheduler run
   }
 
-  public Command cDefault() {
+  public Command defaultRetractAndStop() {
     return run(()->{
       intakeDrive.set(0);
       intakeSolenoid.set(Value.kReverse);
@@ -59,6 +60,10 @@ public class Intake extends SubsystemBase {
   
   public Command cSetNone(){
     return Commands.none();
+  }
+
+  public ParentDevice getIntakeParent(){
+    return intakeDrive;
   }
 }
 

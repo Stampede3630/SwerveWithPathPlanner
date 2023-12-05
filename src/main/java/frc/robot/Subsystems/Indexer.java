@@ -5,6 +5,7 @@
 package frc.robot.Subsystems;
 
 import com.ctre.phoenix6.controls.PositionDutyCycle;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -19,13 +20,13 @@ import monologue.Monologue.LogNT;
 
 public class Indexer extends SubsystemBase implements Logged{
   private final TalonFX bottomMotor = new TalonFX(Constants.IndexBottomMotorID);
-  private final TalonFX indexTop = new TalonFX(Constants.IndexTopMotorID);
+  private final TalonFX topMotor = new TalonFX(Constants.IndexTopMotorID);
   private Trigger topLimitSwitchTrigger;  
   private final DigitalInput bottomLimitSwitch = new DigitalInput(Constants.BottomIntakeSwitchID);
 
   public Indexer(Trigger topLimitSwitchTrigger) {   
     bottomMotor.setNeutralMode(NeutralModeValue.Brake);
-    indexTop.setNeutralMode(NeutralModeValue.Brake);  
+    topMotor.setNeutralMode(NeutralModeValue.Brake);  
     this.topLimitSwitchTrigger=topLimitSwitchTrigger;
   }
 
@@ -34,7 +35,7 @@ public class Indexer extends SubsystemBase implements Logged{
     // This method will be called once per scheduler run
   }
 
-  public Command cDefault(){
+  public Command defaultSpinWhenNeeded(){
      return Commands.either(
       Commands.print("I'm default indexing").andThen(
         setTopBottomIndexer(-.7, -.8))
@@ -44,7 +45,7 @@ public class Indexer extends SubsystemBase implements Logged{
   }
 
   public Command setTopIndexer(double inputSpeed){
-    return runOnce(()->indexTop.set(inputSpeed));
+    return runOnce(()->topMotor.set(inputSpeed));
   }
 
   public Command setBottomIndexer(double inputSpeed){
@@ -53,7 +54,7 @@ public class Indexer extends SubsystemBase implements Logged{
 
   public Command setTopBottomIndexer(double topSpeed, double bottomSpeed){
     return runOnce(()->{
-      indexTop.set(topSpeed);
+      topMotor.set(topSpeed);
       bottomMotor.set(bottomSpeed);
     });
   }
@@ -76,5 +77,13 @@ public class Indexer extends SubsystemBase implements Logged{
   @LogNT
   public boolean getOnlyBottomSwitch() {
     return !getTopLimitSwitch() && getBottomLimitSwitch();
+  }
+
+  public ParentDevice getTopParent(){
+    return topMotor;
+  }
+
+  public ParentDevice getBottomParent(){
+    return bottomMotor;
   }
 }

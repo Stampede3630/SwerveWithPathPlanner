@@ -71,8 +71,8 @@ public class TunerConstants {
 
 
     // Front Left
-    private static final int kFrontLeftDriveMotorId = 13;
-    private static final int kFrontLeftSteerMotorId = 8;
+    public static final int kFrontLeftDriveMotorId = 13;
+    public static final int kFrontLeftSteerMotorId = 8;
     private static final int kFrontLeftEncoderId = 7;
     private static final double kFrontLeftEncoderOffset = Units.degreesToRadians(-37.969);
 
@@ -80,8 +80,8 @@ public class TunerConstants {
     private static final double kFrontLeftYPosInches = 24.685/2.0;
 
     // Front Right
-    private static final int kFrontRightDriveMotorId = 3;
-    private static final int kFrontRightSteerMotorId = 19;
+    public static final int kFrontRightDriveMotorId = 3;
+    public static final int kFrontRightSteerMotorId = 19;
     private static final int kFrontRightEncoderId = 1;
     private static final double kFrontRightEncoderOffset = Units.degreesToRadians(41.748);
 
@@ -89,8 +89,8 @@ public class TunerConstants {
     private static final double kFrontRightYPosInches = -24.685/2.0;
 
     // Back Left
-    private static final int kBackLeftDriveMotorId = 14;
-    private static final int kBackLeftSteerMotorId = 15;
+    public static final int kBackLeftDriveMotorId = 14;
+    public static final int kBackLeftSteerMotorId = 15;
     private static final int kBackLeftEncoderId = 4;
     private static final double kBackLeftEncoderOffset = Units.degreesToRadians(50.537);
 
@@ -98,8 +98,8 @@ public class TunerConstants {
     private static final double kBackLeftYPosInches = 24.685/2.0;
 
     // Back Right
-    private static final int kBackRightDriveMotorId = 16;
-    private static final int kBackRightSteerMotorId = 12;
+    public static final int kBackRightDriveMotorId = 16;
+    public static final int kBackRightSteerMotorId = 12;
     private static final int kBackRightEncoderId = 2;
     private static final double kBackRightEncoderOffset = Units.degreesToRadians(125.244);
 

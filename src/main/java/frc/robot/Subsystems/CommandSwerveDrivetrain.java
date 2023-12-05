@@ -2,6 +2,7 @@ package frc.robot.Subsystems;
 
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
@@ -103,6 +104,19 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     public boolean isChassisMoving(){
         return Math.abs(getCurrentRobotChassisSpeeds().vxMetersPerSecond) < .25 &&
                       Math.abs(getCurrentRobotChassisSpeeds().vyMetersPerSecond) <.25;
+    }
 
+    /**
+     * @param module 0-i
+     * @param type 0 is drive, n is steer
+     * @return
+     */
+    public ParentDevice getSwerveParent(int module, int type){
+        SwerveModule[] modulesToApply = this.Modules;
+        if (type==0) {
+            return modulesToApply[module].getDriveMotor();
+        } else {
+            return modulesToApply[module].getSteerMotor();
+        }
     }
 }

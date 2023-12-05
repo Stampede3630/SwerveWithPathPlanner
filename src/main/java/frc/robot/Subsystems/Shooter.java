@@ -18,6 +18,7 @@ import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -96,6 +97,14 @@ public class Shooter extends SubsystemBase implements Logged {
     return leftLimitSwitch.get() || rightLimitSwitch.get();
   }
 
+  public ParentDevice getHoodParent(){
+    return hoodMotor;
+  }
+
+  public ParentDevice getShooterParent(){
+    return shooterMotor;
+  }
+
   private void applyTalonFXconfig(TalonFX myTalonfx, TalonFXConfiguration myConfig){
           /* Retry config apply up to 5 times, report if failure */
     StatusCode status = StatusCode.StatusCodeNotInitialized;
@@ -107,4 +116,5 @@ public class Shooter extends SubsystemBase implements Logged {
       System.out.println("Could not apply configs, error code: " + status.toString());
     }
   }
+
 }
