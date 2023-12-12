@@ -17,7 +17,12 @@ import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.DoubleTopic;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -37,12 +42,10 @@ public class RobotContainer implements Logged {
   final Intake intake = new Intake();
   final Indexer indexer = new Indexer(topLimitSwitchTrigger);
   final Shooter shooter = new Shooter();
-  
+  final PowerDistribution RevPDH = new PowerDistribution(1, ModuleType.kRev);
   final DoubleSubscriber dashboardIntakeSpeed = NetworkTableInstance.getDefault().getTable("Robot").getDoubleTopic("IntakeSpeed").subscribe(Constants.DefaultIntakeSpeed);
   final DoubleSubscriber dashboardReverseIntakeSpeed = NetworkTableInstance.getDefault().getTable("Robot").getDoubleTopic("ReverseIntakeSpeed").subscribe(Constants.DefaultReverseIntakeSpeed);
-
-
- 
+  
 
   final double MaxSpeed = 6; // 6 meters per second desired top speed
   final double MaxAngularRate = 2 * Math.PI; // Half a rotation per second max angular velocity
@@ -77,6 +80,14 @@ public class RobotContainer implements Logged {
     drivetrain.runOnce(() -> drivetrain.seedFieldRelative());
     doubleSubPublisher(dashboardIntakeSpeed, Constants.DefaultIntakeSpeed);
     doubleSubPublisher(dashboardReverseIntakeSpeed, Constants.DefaultReverseIntakeSpeed);
+    SmartDashboard.putData("Match Time", new Sendable() {
+    @Override
+        public void initSendable(SendableBuilder builder) {
+            builder.setSmartDashboardType("Match Time");
+            builder.addDoubleProperty("time left", ()->DriverStation.getMatchTime(), null);
+        }
+      });
+    SmartDashboard.putData(RevPDH);
     
   }
 
@@ -94,7 +105,7 @@ public class RobotContainer implements Logged {
     shooter.setDefaultCommand(Commands.either(
       shooter.setShooterRPS(()->40),
       shooter.cCoastShooter(),
-      topLimitSwitchTrigger).withName("DefaultShooter").repeatedly());
+      topLimitSwitchTrigger).repeatedly().withName("DefaultShooter"));
 
     //REVERSEINTAKE
     joystick.rightBumper().debounce(.2)

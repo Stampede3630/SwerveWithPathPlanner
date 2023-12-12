@@ -17,8 +17,18 @@ import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.DoubleArrayPublisher;
+import edu.wpi.first.networktables.DoubleArrayTopic;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.ProtobufPublisher;
+import edu.wpi.first.networktables.PubSubOption;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.Topic;
+import edu.wpi.first.networktables.TopicInfo;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -36,19 +46,22 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
  */
 public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsystem {
     private final SwerveRequest.ApplyChassisSpeeds autoRequest = new SwerveRequest.ApplyChassisSpeeds();
-
+    private final Translation2d[] swerveModuleLocationArray = this.m_moduleLocations;
+    private final DoubleArrayPublisher swerveModuleLocationArrayPublisher = NetworkTableInstance.getDefault().getDoubleArrayTopic("/SwerveDrive Base/wheelLocations").publish(PubSubOption.periodic(.1));
 
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, double OdometryUpdateFrequency, SwerveModuleConstants... modules) {
         super(driveTrainConstants, OdometryUpdateFrequency, modules);
         configurePathPlanner();
-        sendToDashboard();
+        sendToElasticDashboard();
+        SmartDashboard.putData(rezeroGyro());
     }
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
         super(driveTrainConstants, modules);
         configurePathPlanner();
-        sendToDashboard();
-
+        sendToElasticDashboard();
+        
     }
+    
 
     private void configurePathPlanner() {
         AutoBuilder.configureHolonomic(
@@ -114,6 +127,12 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
                       Math.abs(getCurrentRobotChassisSpeeds().vyMetersPerSecond) <.25;
     }
 
+    public Command rezeroGyro(){
+        return runOnce(()->this.m_odometry.resetPosition(m_pigeon2.getRotation2d(), m_modulePositions, new Pose2d()))
+            .ignoringDisable(true)
+            .withName("reZero Gyro");
+    }
+
     
 
     /**
@@ -130,7 +149,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         }
     }
 
-    public void sendToDashboard(){
+    public void sendToElasticDashboard(){
         SwerveModule[] module = this.Modules;
 
         SmartDashboard.putData("Swerve Drive", new Sendable() {
