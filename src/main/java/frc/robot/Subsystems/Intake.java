@@ -9,6 +9,7 @@ import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
@@ -40,15 +41,15 @@ public class Intake extends SubsystemBase {
     });
   }
 
-  public Command cExtendAndSetSpeed(double inputSpeed){
+  public Command cExtendAndSetSpeed(DoubleSubscriber inputSpeed){
     return Commands.sequence(cExtend(),
     cSetIntakeSpeed(inputSpeed));
   }
 
 
-  public Command cSetIntakeSpeed(double inputSpeed){
+  public Command cSetIntakeSpeed(DoubleSubscriber inputSpeed){
     return run(()->{
-      intakeDrive.set(inputSpeed);
+      intakeDrive.set(inputSpeed.getAsDouble());
     });
   }
 

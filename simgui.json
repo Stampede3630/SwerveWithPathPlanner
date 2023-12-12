@@ -9,6 +9,11 @@
       "/SmartDashboard/Module 3": "Mechanism2d"
     },
     "windows": {
+      "/FMSInfo": {
+        "window": {
+          "visible": true
+        }
+      },
       "/Pose": {
         "window": {
           "visible": true
@@ -32,6 +37,9 @@
       "Pose": {
         "open": true
       },
+      "Robot": {
+        "open": true
+      },
       "Shuffleboard": {
         "open": true
       },
@@ -42,5 +50,8 @@
         "open": true
       }
     }
+  },
+  "NetworkTables Info": {
+    "visible": true
   }
 }

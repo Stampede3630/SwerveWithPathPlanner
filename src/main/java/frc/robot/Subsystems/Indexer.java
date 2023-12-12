@@ -9,6 +9,8 @@ import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.networktables.DoubleSubscriber;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -23,6 +25,7 @@ public class Indexer extends SubsystemBase implements Logged{
   private final TalonFX topMotor = new TalonFX(Constants.IndexTopMotorID);
   private Trigger topLimitSwitchTrigger;  
   private final DigitalInput bottomLimitSwitch = new DigitalInput(Constants.BottomIntakeSwitchID);
+  
 
   public Indexer(Trigger topLimitSwitchTrigger) {   
     bottomMotor.setNeutralMode(NeutralModeValue.Brake);
