@@ -6,9 +6,16 @@
       "/SmartDashboard/Module 0": "Mechanism2d",
       "/SmartDashboard/Module 1": "Mechanism2d",
       "/SmartDashboard/Module 2": "Mechanism2d",
-      "/SmartDashboard/Module 3": "Mechanism2d"
+      "/SmartDashboard/Module 3": "Mechanism2d",
+      "/SmartDashboard/Scheduler": "Scheduler",
+      "/SmartDashboard/reZero Gyro": "Command"
     },
     "windows": {
+      "/FMSInfo": {
+        "window": {
+          "visible": true
+        }
+      },
       "/Pose": {
         "window": {
           "visible": true
@@ -32,6 +39,9 @@
       "Pose": {
         "open": true
       },
+      "Robot": {
+        "open": true
+      },
       "Shuffleboard": {
         "open": true
       },
@@ -42,5 +52,20 @@
         "open": true
       }
     }
+  },
+  "NetworkTables Info": {
+    "Clients": {
+      "open": true
+    },
+    "Connections": {
+      "open": true
+    },
+    "Server": {
+      "open": true
+    },
+    "elastic@1": {
+      "open": true
+    },
+    "visible": true
   }
 }

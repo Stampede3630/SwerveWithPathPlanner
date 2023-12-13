@@ -12,7 +12,18 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.DoubleSubscriber;
+import edu.wpi.first.networktables.DoubleTopic;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.PubSubOption;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -31,9 +42,10 @@ public class RobotContainer implements Logged {
   final Intake intake = new Intake();
   final Indexer indexer = new Indexer(topLimitSwitchTrigger);
   final Shooter shooter = new Shooter();
-
-
- 
+  final PowerDistribution RevPDH = new PowerDistribution(1, ModuleType.kRev);
+  final DoubleSubscriber dashboardIntakeSpeed = NetworkTableInstance.getDefault().getTable("Robot").getDoubleTopic("IntakeSpeed").subscribe(Constants.DefaultIntakeSpeed);
+  final DoubleSubscriber dashboardReverseIntakeSpeed = NetworkTableInstance.getDefault().getTable("Robot").getDoubleTopic("ReverseIntakeSpeed").subscribe(Constants.DefaultReverseIntakeSpeed);
+  
 
   final double MaxSpeed = 6; // 6 meters per second desired top speed
   final double MaxAngularRate = 2 * Math.PI; // Half a rotation per second max angular velocity
@@ -66,6 +78,17 @@ public class RobotContainer implements Logged {
   public RobotContainer() {
     configureBindings();
     drivetrain.runOnce(() -> drivetrain.seedFieldRelative());
+    doubleSubPublisher(dashboardIntakeSpeed, Constants.DefaultIntakeSpeed);
+    doubleSubPublisher(dashboardReverseIntakeSpeed, Constants.DefaultReverseIntakeSpeed);
+    SmartDashboard.putData("Match Time", new Sendable() {
+    @Override
+        public void initSendable(SendableBuilder builder) {
+            builder.setSmartDashboardType("Match Time");
+            builder.addDoubleProperty("time left", ()->DriverStation.getMatchTime(), null);
+        }
+      });
+    SmartDashboard.putData(RevPDH);
+    
   }
 
   private void configureBindings() {
@@ -75,34 +98,34 @@ public class RobotContainer implements Logged {
             .withVelocityX(-joystick.getLeftY() * MaxSpeed)             // Drive forward with negative Y (forward)
             .withVelocityY(-joystick.getLeftX() * MaxSpeed)             // Drive left with negative X (left)
             .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-        ).ignoringDisable(true));                   // Calculates requests during disabled
-    intake.setDefaultCommand(intake.defaultRetractAndStop());
-    indexer.setDefaultCommand(indexer.defaultSpinWhenNeeded());
+        ).ignoringDisable(true).withName("DefaultDrive"));                   // Calculates requests during disabled
+    intake.setDefaultCommand(intake.defaultRetractAndStop().withName("DefaultIntake"));
+    indexer.setDefaultCommand(indexer.defaultSpinWhenNeeded().withName("DefaultIndexer"));
     
     shooter.setDefaultCommand(Commands.either(
       shooter.setShooterRPS(()->40),
       shooter.cCoastShooter(),
-      topLimitSwitchTrigger).repeatedly());
+      topLimitSwitchTrigger).repeatedly().withName("DefaultShooter"));
 
     //REVERSEINTAKE
     joystick.rightBumper().debounce(.2)
       .whileTrue(
       Commands.parallel(
-        intake.cExtendAndSetSpeed(-.8),
-        indexer.setTopBottomIndexer(.8, .7))
-        );
+        intake.cExtendAndSetSpeed(dashboardReverseIntakeSpeed),
+        indexer.setTopBottomIndexer(.8, .7)).withName("RightBumperCommand")
+      );
 
     //INTAKE
-    joystick.rightTrigger(.5).debounce(.2)
+    joystick.rightTrigger(.5).debounce(.1)
       .whileTrue(
         Commands.parallel(
-          intake.cExtendAndSetSpeed(.8),
+          intake.cExtendAndSetSpeed(dashboardReverseIntakeSpeed),
           indexer.setTopBottomIndexer(-.35, -.35).until(topLimitSwitchTrigger)
-          )
+          ).withName("RightTriggerCommand")
       );
 
     //SHOOT
-    joystick.leftTrigger(.5).debounce(.2)
+    joystick.leftTrigger(.5).debounce(.1)
       .whileTrue(
         Commands.sequence(
           Commands.print("I'm shooting!"),
@@ -111,24 +134,24 @@ public class RobotContainer implements Logged {
           Commands.either(
             indexer.setTopBottomIndexer(-.7, -.8),
             indexer.setTopBottomIndexer(0, 0),
-            shooter::getShooterAtSpeed)).repeatedly()
+            shooter::getShooterAtSpeed)).repeatedly().withName("LeftTriggerCommand")
           )
-      .whileFalse(shooter.cCoastShooter());
+      .whileFalse(shooter.cCoastShooter().withName("CoastShooter"));
     
     //PLAY NEXT SONG
-    joystick.a().debounce(.2)
-      .onTrue(Commands.runOnce(()->nextTrack()));
+    joystick.a().debounce(.1)
+      .onTrue(Commands.runOnce(()->nextTrack()).withName("A Button: Play Next Song"));
     
     //Pause/Play
-    joystick.b().debounce(.2)
+    joystick.b().debounce(.1)
       .toggleOnTrue(Commands.either(
         Commands.runOnce(()->pauseOrchestra()),
         Commands.runOnce(()->playOrchestra()),
         ()->THEOrchestra.isPlaying()
-      ));
+      ).withName("B Command: Pause or play"));
 
-    joystick.x().debounce(.2, DebounceType.kFalling).whileTrue(drivetrain
-        .applyRequest(() -> requestPointWheelsAt.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))));
+    joystick.x().debounce(.1, DebounceType.kFalling).whileTrue(drivetrain
+        .applyRequest(() -> requestPointWheelsAt.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))).withName("X Command:Point Wheels"));
 
     // reset the field-centric heading on left bumper press
 
@@ -185,5 +208,8 @@ public class RobotContainer implements Logged {
     playOrchestra();
   }
 
+  public void doubleSubPublisher(DoubleSubscriber myDubSUb, double defValue){
+    myDubSUb.getTopic().publish(PubSubOption.disableLocal(false)).setDefault(defValue);  
+  }
 
 }

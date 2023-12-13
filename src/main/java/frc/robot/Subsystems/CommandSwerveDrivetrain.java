@@ -17,11 +17,25 @@ import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.DoubleArrayPublisher;
+import edu.wpi.first.networktables.DoubleArrayTopic;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.ProtobufPublisher;
+import edu.wpi.first.networktables.PubSubOption;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.Topic;
+import edu.wpi.first.networktables.TopicInfo;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
@@ -32,15 +46,22 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
  */
 public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsystem {
     private final SwerveRequest.ApplyChassisSpeeds autoRequest = new SwerveRequest.ApplyChassisSpeeds();
+    private final Translation2d[] swerveModuleLocationArray = this.m_moduleLocations;
+    private final DoubleArrayPublisher swerveModuleLocationArrayPublisher = NetworkTableInstance.getDefault().getDoubleArrayTopic("/SwerveDrive Base/wheelLocations").publish(PubSubOption.periodic(.1));
 
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, double OdometryUpdateFrequency, SwerveModuleConstants... modules) {
         super(driveTrainConstants, OdometryUpdateFrequency, modules);
         configurePathPlanner();
+        sendToElasticDashboard();
+        SmartDashboard.putData(rezeroGyro());
     }
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
         super(driveTrainConstants, modules);
         configurePathPlanner();
+        sendToElasticDashboard();
+        
     }
+    
 
     private void configurePathPlanner() {
         AutoBuilder.configureHolonomic(
@@ -106,10 +127,18 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
                       Math.abs(getCurrentRobotChassisSpeeds().vyMetersPerSecond) <.25;
     }
 
+    public Command rezeroGyro(){
+        return runOnce(()->this.m_odometry.resetPosition(m_pigeon2.getRotation2d(), m_modulePositions, new Pose2d()))
+            .ignoringDisable(true)
+            .withName("reZero Gyro");
+    }
+
+    
+
     /**
      * @param module 0-i
      * @param type 0 is drive, n is steer
-     * @return
+     * @return ParentDevice
      */
     public ParentDevice getSwerveParent(int module, int type){
         SwerveModule[] modulesToApply = this.Modules;
@@ -118,5 +147,30 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         } else {
             return modulesToApply[module].getSteerMotor();
         }
+    }
+
+    public void sendToElasticDashboard(){
+        SwerveModule[] module = this.Modules;
+
+        SmartDashboard.putData("Swerve Drive", new Sendable() {
+        @Override
+        public void initSendable(SendableBuilder builder) {
+            builder.setSmartDashboardType("SwerveDrive");
+
+            builder.addDoubleProperty("Front Left Angle", () -> module[0].getCurrentState().angle.getDegrees(), null);
+            builder.addDoubleProperty("Front Left Velocity", () -> module[0].getCurrentState().speedMetersPerSecond, null);
+
+            builder.addDoubleProperty("Front Right Angle", () -> module[1].getCurrentState().angle.getDegrees(), null);
+            builder.addDoubleProperty("Front Right Velocity", () -> module[1].getCurrentState().speedMetersPerSecond, null);
+
+            builder.addDoubleProperty("Back Left Angle", () -> module[2].getCurrentState().angle.getDegrees(), null);
+            builder.addDoubleProperty("Back Left Velocity", () -> module[2].getCurrentState().speedMetersPerSecond, null);
+
+            builder.addDoubleProperty("Back Right Angle", () -> module[3].getCurrentState().angle.getDegrees(), null);
+            builder.addDoubleProperty("Back Right Velocity", () -> module[3].getCurrentState().speedMetersPerSecond, null);
+
+            builder.addDoubleProperty("Robot Angle",()-> m_odometry.getEstimatedPosition().getRotation().getDegrees(), null);
+        }
+        });
     }
 }

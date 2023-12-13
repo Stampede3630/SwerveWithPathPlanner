@@ -24,4 +24,8 @@ public class Constants {
     public static final int ClimberSolenoidReverseID = 3;
     public static final int LeftClimberSwitchID = 2;
     public static final int RightClimberSwitchID = 3;
+
+    public static final double DefaultIntakeSpeed = .8;
+
+    public static final double DefaultReverseIntakeSpeed = -0.8;
 }
