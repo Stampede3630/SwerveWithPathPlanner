@@ -90,7 +90,7 @@ public class Shooter extends SubsystemBase implements Logged {
 
   @LogNT
   public boolean getShooterAtSpeed(){
-    return shooterMotor.getClosedLoopReference().getValueAsDouble()*0.95 <= shooterMotor.getVelocity().getValueAsDouble();
+    return Math.abs(shooterMotor.getClosedLoopReference().getValueAsDouble()*0.95) <= Math.abs(shooterMotor.getVelocity().getValueAsDouble());
   }
 
   public boolean checkHoodLimitSwitches(){
