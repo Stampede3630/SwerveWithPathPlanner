@@ -41,8 +41,10 @@ public class Indexer extends SubsystemBase implements Logged{
   public Command defaultSpinWhenNeeded(){
      return Commands.either(
       Commands.print("I'm default indexing").andThen(
-        setTopBottomIndexer(-.7, -.8))
-        .until(()->getTopLimitSwitch()),
+        setTopBottomIndexer(-.4, -.4))
+        .unless(topLimitSwitchTrigger)
+        .until(topLimitSwitchTrigger)
+        .andThen(setTopBottomIndexer(0, 0)),
         setTopBottomIndexer(0, 0),
         ()->getOnlyBottomSwitch()).repeatedly();
   }

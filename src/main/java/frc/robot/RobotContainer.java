@@ -120,7 +120,9 @@ public class RobotContainer implements Logged {
       .whileTrue(
         Commands.parallel(
           intake.cExtendAndSetSpeed(dashboardIntakeSpeed),
-          indexer.setTopBottomIndexer(-.35, -.35).until(topLimitSwitchTrigger)
+          indexer.setTopBottomIndexer(-.35, -.35)
+          .unless(topLimitSwitchTrigger)
+          .until(topLimitSwitchTrigger)
           ).withName("RightTriggerCommand")
       );
 
