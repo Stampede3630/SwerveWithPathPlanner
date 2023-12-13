@@ -22,6 +22,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoubleArrayTopic;
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.ProtobufPublisher;
@@ -48,18 +49,24 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     private final SwerveRequest.ApplyChassisSpeeds autoRequest = new SwerveRequest.ApplyChassisSpeeds();
     private final Translation2d[] swerveModuleLocationArray = this.m_moduleLocations;
     private final DoubleArrayPublisher swerveModuleLocationArrayPublisher = NetworkTableInstance.getDefault().getDoubleArrayTopic("/SwerveDrive Base/wheelLocations").publish(PubSubOption.periodic(.1));
-
+    private final DoubleArrayPublisher swerveModuleStateArrayPublisher = NetworkTableInstance.getDefault().getDoubleArrayTopic("/SwerveDrive Base/measuredStates").publish(PubSubOption.periodic(.1));
+    private final DoublePublisher  moduleCountPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/SwerveDrive Base/moduleCount").publish(PubSubOption.periodic(.1));
+    private final DoublePublisher  robotRotationPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/SwerveDrive Base/robotRotation").publish(PubSubOption.periodic(.1));
+    private final DoublePublisher  sizeLeftRightPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/SwerveDrive Base/sizeLeftRight").publish(PubSubOption.periodic(.1));
+    private final DoublePublisher  sizeFrontBackPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/SwerveDrive Base/sizeFrontBack").publish(PubSubOption.periodic(.1));
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, double OdometryUpdateFrequency, SwerveModuleConstants... modules) {
         super(driveTrainConstants, OdometryUpdateFrequency, modules);
         configurePathPlanner();
         sendToElasticDashboard();
         SmartDashboard.putData(rezeroGyro());
+        initFWCSwerveDrive();
     }
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
         super(driveTrainConstants, modules);
         configurePathPlanner();
         sendToElasticDashboard();
-        
+        SmartDashboard.putData(rezeroGyro());
+        initFWCSwerveDrive();
     }
     
 
@@ -79,7 +86,8 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     }
 
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
-        return run(() -> this.setControl(requestSupplier.get()));
+        return run(() -> {this.setControl(requestSupplier.get());
+        updateFWCSwerveDrive();});
     }
 
     public Command applyNeutralModeBrake(){
@@ -131,6 +139,36 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         return runOnce(()->this.m_odometry.resetPosition(m_pigeon2.getRotation2d(), m_modulePositions, new Pose2d()))
             .ignoringDisable(true)
             .withName("reZero Gyro");
+    }
+
+    public void initFWCSwerveDrive(){
+        moduleCountPublisher.set(this.ModuleCount);
+        sizeFrontBackPublisher.set(Math.abs(this.m_moduleLocations[0].getX()*2));
+        sizeLeftRightPublisher.set(Math.abs(this.m_moduleLocations[0].getY()*2));
+        double[] myDoubleArray = new double[this.ModuleCount*2];
+        for (int i=0; i<this.ModuleCount; i++) {
+            myDoubleArray[2*i] = this.m_moduleLocations[i].getX();
+            myDoubleArray[2*i+1] = this.m_moduleLocations[i].getY();
+        }
+        swerveModuleLocationArrayPublisher.set(myDoubleArray);
+    }
+
+    public void updateFWCSwerveDrive(){
+        robotRotationPublisher.set(this.m_odometry.getEstimatedPosition().getRotation().getDegrees());
+
+        double[] myMeasuredStatesArray = new double[this.ModuleCount*2];
+        double[] myDesiredStatesArray = new double[this.ModuleCount*2];
+        ;
+        SwerveDriveState SDstate = this.getState();
+        if (SDstate.ModuleStates != null) {
+            
+        
+        for (int i=0; i<this.ModuleCount; i++) {
+            myMeasuredStatesArray[2*i] = SDstate.ModuleStates[i].angle.getCos()*SDstate.ModuleStates[i].speedMetersPerSecond;
+            myMeasuredStatesArray[2*i+1] = SDstate.ModuleStates[i].angle.getSin()*SDstate.ModuleStates[i].speedMetersPerSecond;
+        }
+        swerveModuleStateArrayPublisher.set(myMeasuredStatesArray);
+        }
     }
 
     
