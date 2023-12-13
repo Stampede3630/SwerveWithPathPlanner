@@ -74,7 +74,7 @@ public class TunerConstants {
     public static final int kFrontLeftDriveMotorId = 13;
     public static final int kFrontLeftSteerMotorId = 8;
     private static final int kFrontLeftEncoderId = 7;
-    private static final double kFrontLeftEncoderOffset = Units.degreesToRadians(-37.969);
+    private static final double kFrontLeftEncoderOffset = -0.113770;
 
     private static final double kFrontLeftXPosInches = 24.125/2.0;
     private static final double kFrontLeftYPosInches = 24.685/2.0;
@@ -83,7 +83,7 @@ public class TunerConstants {
     public static final int kFrontRightDriveMotorId = 3;
     public static final int kFrontRightSteerMotorId = 19;
     private static final int kFrontRightEncoderId = 1;
-    private static final double kFrontRightEncoderOffset = Units.degreesToRadians(41.748);
+    private static final double kFrontRightEncoderOffset = 0.090087890625;
 
     private static final double kFrontRightXPosInches = 24.125/2.0;
     private static final double kFrontRightYPosInches = -24.685/2.0;
@@ -92,7 +92,7 @@ public class TunerConstants {
     public static final int kBackLeftDriveMotorId = 14;
     public static final int kBackLeftSteerMotorId = 15;
     private static final int kBackLeftEncoderId = 4;
-    private static final double kBackLeftEncoderOffset = Units.degreesToRadians(50.537);
+    private static final double kBackLeftEncoderOffset = 0.13232421875;
 
     private static final double kBackLeftXPosInches = -24.125/2.0;
     private static final double kBackLeftYPosInches = 24.685/2.0;
@@ -101,7 +101,7 @@ public class TunerConstants {
     public static final int kBackRightDriveMotorId = 16;
     public static final int kBackRightSteerMotorId = 12;
     private static final int kBackRightEncoderId = 2;
-    private static final double kBackRightEncoderOffset = Units.degreesToRadians(125.244);
+    private static final double kBackRightEncoderOffset = 0.34716796875;
 
     private static final double kBackRightXPosInches = -24.125/2.0;
     private static final double kBackRightYPosInches = -24.685/2.0;
