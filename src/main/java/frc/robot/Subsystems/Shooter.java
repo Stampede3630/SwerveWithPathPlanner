@@ -8,6 +8,7 @@ import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.AudioConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -34,7 +35,8 @@ import monologue.Monologue.LogNT;
 public class Shooter extends SubsystemBase implements Logged {
   private final TalonFX hoodMotor = new TalonFX(Constants.HoodMotorID, "rio");
   private final TalonFXConfiguration hoodConfiguration = new TalonFXConfiguration()
-    .withMotorOutput(new MotorOutputConfigs()
+  .withAudio(new AudioConfigs().withAllowMusicDurDisable(true))  
+  .withMotorOutput(new MotorOutputConfigs()
       .withNeutralMode(NeutralModeValue.Coast)
       .withInverted(InvertedValue.CounterClockwise_Positive))
     .withSlot0(new Slot0Configs()
@@ -43,9 +45,10 @@ public class Shooter extends SubsystemBase implements Logged {
     
   private final TalonFX shooterMotor = new TalonFX(Constants.ShooterMotorID, "rio");
   private TalonFXConfiguration shooterConfiguration = new TalonFXConfiguration()
+    .withAudio(new AudioConfigs().withAllowMusicDurDisable(true))
     .withMotorOutput(new MotorOutputConfigs()
       .withNeutralMode(NeutralModeValue.Coast)
-      .withInverted(InvertedValue.CounterClockwise_Positive))
+      .withInverted(InvertedValue.Clockwise_Positive))
     .withSlot0(new Slot0Configs()
       .withKP(.11)     // An error of 1 rotation per second results in 5 amps output
       .withKI(.5)    // An error of 1 rotation per second increases output by 0.1 amps every second
@@ -90,7 +93,7 @@ public class Shooter extends SubsystemBase implements Logged {
 
   @LogNT
   public boolean getShooterAtSpeed(){
-    return shooterMotor.getClosedLoopReference().getValueAsDouble()*0.95 <= shooterMotor.getVelocity().getValueAsDouble();
+    return Math.abs(shooterMotor.getClosedLoopReference().getValueAsDouble()*0.95) <= Math.abs(shooterMotor.getVelocity().getValueAsDouble());
   }
 
   public boolean checkHoodLimitSwitches(){

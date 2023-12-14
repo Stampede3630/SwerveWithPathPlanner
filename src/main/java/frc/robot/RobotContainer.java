@@ -42,7 +42,7 @@ public class RobotContainer implements Logged {
   final Intake intake = new Intake();
   final Indexer indexer = new Indexer(topLimitSwitchTrigger);
   final Shooter shooter = new Shooter();
-  final PowerDistribution RevPDH = new PowerDistribution(1, ModuleType.kRev);
+  //final PowerDistribution RevPDH = new PowerDistribution(1, ModuleType.kRev);
   final DoubleSubscriber dashboardIntakeSpeed = NetworkTableInstance.getDefault().getTable("Robot").getDoubleTopic("IntakeSpeed").subscribe(Constants.DefaultIntakeSpeed);
   final DoubleSubscriber dashboardReverseIntakeSpeed = NetworkTableInstance.getDefault().getTable("Robot").getDoubleTopic("ReverseIntakeSpeed").subscribe(Constants.DefaultReverseIntakeSpeed);
   
@@ -87,7 +87,7 @@ public class RobotContainer implements Logged {
             builder.addDoubleProperty("time left", ()->DriverStation.getMatchTime(), null);
         }
       });
-    SmartDashboard.putData(RevPDH);
+    //SmartDashboard.putData(RevPDH);
     
   }
 
@@ -98,7 +98,7 @@ public class RobotContainer implements Logged {
             .withVelocityX(-joystick.getLeftY() * MaxSpeed)             // Drive forward with negative Y (forward)
             .withVelocityY(-joystick.getLeftX() * MaxSpeed)             // Drive left with negative X (left)
             .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-        ).ignoringDisable(true).withName("DefaultDrive"));                   // Calculates requests during disabled
+        ).ignoringDisable(false).withName("DefaultDrive"));                   // Calculates requests during disabled
     intake.setDefaultCommand(intake.defaultRetractAndStop().withName("DefaultIntake"));
     indexer.setDefaultCommand(indexer.defaultSpinWhenNeeded().withName("DefaultIndexer"));
     
@@ -112,15 +112,17 @@ public class RobotContainer implements Logged {
       .whileTrue(
       Commands.parallel(
         intake.cExtendAndSetSpeed(dashboardReverseIntakeSpeed),
-        indexer.setTopBottomIndexer(.8, .7)).withName("RightBumperCommand")
+        indexer.setTopBottomIndexer(.4, .4)).withName("RightBumperCommand")
       );
 
     //INTAKE
     joystick.rightTrigger(.5).debounce(.1)
       .whileTrue(
         Commands.parallel(
-          intake.cExtendAndSetSpeed(dashboardReverseIntakeSpeed),
-          indexer.setTopBottomIndexer(-.35, -.35).until(topLimitSwitchTrigger)
+          intake.cExtendAndSetSpeed(dashboardIntakeSpeed),
+          indexer.setTopBottomIndexer(-.35, -.35)
+          .unless(topLimitSwitchTrigger)
+          .until(topLimitSwitchTrigger)
           ).withName("RightTriggerCommand")
       );
 
@@ -132,7 +134,7 @@ public class RobotContainer implements Logged {
           shooter.setShooterRPS(()->60),
 
           Commands.either(
-            indexer.setTopBottomIndexer(-.7, -.8),
+            indexer.setTopBottomIndexer(-.5, -.5),
             indexer.setTopBottomIndexer(0, 0),
             shooter::getShooterAtSpeed)).repeatedly().withName("LeftTriggerCommand")
           )
@@ -140,7 +142,7 @@ public class RobotContainer implements Logged {
     
     //PLAY NEXT SONG
     joystick.a().debounce(.1)
-      .onTrue(Commands.runOnce(()->nextTrack()).withName("A Button: Play Next Song"));
+      .onTrue(Commands.run(()->nextTrack()).withName("A Button: Play Next Song").ignoringDisable(true));
     
     //Pause/Play
     joystick.b().debounce(.1)
