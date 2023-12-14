@@ -78,8 +78,8 @@ public class RobotContainer implements Logged {
   public RobotContainer() {
     configureBindings();
     drivetrain.runOnce(() -> drivetrain.seedFieldRelative());
-    doubleSubPublisher(dashboardIntakeSpeed, Constants.DefaultIntakeSpeed);
-    doubleSubPublisher(dashboardReverseIntakeSpeed, Constants.DefaultReverseIntakeSpeed);
+    dashboardIntakeSpeed.getTopic().publish(PubSubOption.pollStorage(1));
+    dashboardReverseIntakeSpeed.getTopic().publish(PubSubOption.pollStorage(1));
     SmartDashboard.putData("Match Time", new Sendable() {
     @Override
         public void initSendable(SendableBuilder builder) {
@@ -92,6 +92,8 @@ public class RobotContainer implements Logged {
   }
 
   private void configureBindings() {
+    
+    //DEFAULTS
     drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
         drivetrain.applyRequest(
           () -> requestFODrive
@@ -101,9 +103,7 @@ public class RobotContainer implements Logged {
         ).ignoringDisable(false).withName("DefaultDrive"));                   // Calculates requests during disabled
     intake.setDefaultCommand(intake.defaultRetractAndStop().withName("DefaultIntake"));
     indexer.setDefaultCommand(indexer.defaultSpinWhenNeeded().withName("DefaultIndexer"));
-    
-    shooter.setDefaultCommand(
-      shooter.setShooterRPS(()->40).onlyWhile(topLimitSwitchTrigger).withName("DefaultShooter").repeatedly());
+    shooter.setDefaultCommand(shooter.setShooterRPS(()->40).onlyWhile(topLimitSwitchTrigger).withName("DefaultShooter").repeatedly());
 
     //REVERSEINTAKE
     joystick.rightBumper().debounce(.1)
@@ -214,9 +214,4 @@ public class RobotContainer implements Logged {
     THEOrchestra.loadMusic(orchestraPlayList[currentSong]);
     playOrchestra();
   }
-
-  public void doubleSubPublisher(DoubleSubscriber myDubSUb, double defValue){
-    myDubSUb.getTopic().publish(PubSubOption.disableLocal(false)).setDefault(defValue);  
-  }
-
 }
