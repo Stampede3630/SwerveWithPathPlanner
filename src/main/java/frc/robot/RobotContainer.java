@@ -102,13 +102,11 @@ public class RobotContainer implements Logged {
     intake.setDefaultCommand(intake.defaultRetractAndStop().withName("DefaultIntake"));
     indexer.setDefaultCommand(indexer.defaultSpinWhenNeeded().withName("DefaultIndexer"));
     
-    shooter.setDefaultCommand(Commands.either(
-      shooter.setShooterRPS(()->40),
-      shooter.cCoastShooter(),
-      topLimitSwitchTrigger).repeatedly().withName("DefaultShooter"));
+    shooter.setDefaultCommand(
+      shooter.setShooterRPS(()->40).onlyWhile(topLimitSwitchTrigger).withName("DefaultShooter").repeatedly());
 
     //REVERSEINTAKE
-    joystick.rightBumper().debounce(.2)
+    joystick.rightBumper().debounce(.1)
       .whileTrue(
       Commands.parallel(
         intake.cExtendAndSetSpeed(dashboardReverseIntakeSpeed),
@@ -120,9 +118,9 @@ public class RobotContainer implements Logged {
       .whileTrue(
         Commands.parallel(
           intake.cExtendAndSetSpeed(dashboardIntakeSpeed),
-          indexer.setTopBottomIndexer(-.35, -.35)
-          .unless(topLimitSwitchTrigger)
-          .until(topLimitSwitchTrigger)
+          indexer.setBottomIndexer(-.35)
+            .unless(topLimitSwitchTrigger)
+            .until(topLimitSwitchTrigger)
           ).withName("RightTriggerCommand")
       );
 
@@ -137,16 +135,23 @@ public class RobotContainer implements Logged {
             indexer.setTopBottomIndexer(-.5, -.5),
             indexer.setTopBottomIndexer(0, 0),
             shooter::getShooterAtSpeed)).repeatedly().withName("LeftTriggerCommand")
-          )
-      .whileFalse(shooter.cCoastShooter().withName("CoastShooter"));
+          );
     
     //PLAY NEXT SONG
     joystick.a().debounce(.1)
-      .onTrue(Commands.run(()->nextTrack()).withName("A Button: Play Next Song").ignoringDisable(true));
+      .onTrue(
+        Commands.parallel(
+          Commands.runOnce(()->nextTrack()),
+          Commands.idle(
+            drivetrain,
+            shooter,
+            indexer,
+            intake
+          ).until(joystick.b()).withName("A Button: Play Next Song").ignoringDisable(true)));
     
     //Pause/Play
     joystick.b().debounce(.1)
-      .toggleOnTrue(Commands.either(
+      .onTrue(Commands.either(
         Commands.runOnce(()->pauseOrchestra()),
         Commands.runOnce(()->playOrchestra()),
         ()->THEOrchestra.isPlaying()

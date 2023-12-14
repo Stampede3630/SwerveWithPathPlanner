@@ -25,6 +25,8 @@ public class Indexer extends SubsystemBase implements Logged{
   private final TalonFX topMotor = new TalonFX(Constants.IndexTopMotorID);
   private Trigger topLimitSwitchTrigger;  
   private final DigitalInput bottomLimitSwitch = new DigitalInput(Constants.BottomIntakeSwitchID);
+  boolean lockIndexer = false;
+  boolean indexNow = false;
   
 
   public Indexer(Trigger topLimitSwitchTrigger) {   
@@ -35,33 +37,33 @@ public class Indexer extends SubsystemBase implements Logged{
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    if(lockIndexer && !getTopLimitSwitch()){
+      lockIndexer = false;
+    } else if(!lockIndexer && getTopLimitSwitch()) {
+      lockIndexer = true;
+      indexNow = false;
+    }
+
+    if(getOnlyBottomSwitch()){
+      indexNow = true;
+    }
   }
 
   public Command defaultSpinWhenNeeded(){
-     return Commands.either(
-      Commands.print("I'm default indexing").andThen(
-        setTopBottomIndexer(-.4, -.4))
-        .unless(topLimitSwitchTrigger)
-        .until(topLimitSwitchTrigger)
-        .andThen(setTopBottomIndexer(0, 0)),
-        setTopBottomIndexer(0, 0),
-        ()->getOnlyBottomSwitch()).repeatedly();
+     return 
+        setTopBottomIndexer(-.4, -.4).onlyWhile(()->!lockIndexer && indexNow).repeatedly();
   }
 
   public Command setTopIndexer(double inputSpeed){
-    return runOnce(()->topMotor.set(inputSpeed));
+    return startEnd(()->topMotor.set(inputSpeed),()->topMotor.set(0));
   }
 
   public Command setBottomIndexer(double inputSpeed){
-    return runOnce(()->bottomMotor.set(inputSpeed));
+    return startEnd(()->bottomMotor.set(inputSpeed),()->bottomMotor.set(0));
   }
 
   public Command setTopBottomIndexer(double topSpeed, double bottomSpeed){
-    return runOnce(()->{
-      topMotor.set(topSpeed);
-      bottomMotor.set(bottomSpeed);
-    });
+    return Commands.parallel(setTopIndexer(topSpeed), setBottomIndexer(bottomSpeed));
   }
 
   public Command cSetNone(){

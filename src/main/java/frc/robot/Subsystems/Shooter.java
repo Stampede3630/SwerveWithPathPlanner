@@ -84,7 +84,7 @@ public class Shooter extends SubsystemBase implements Logged {
   }
 
   public Command setShooterRPS(DoubleSupplier shooterRPS){
-    return runOnce(()->shooterMotor.setControl(shooterVelocityDrive.withVelocity(shooterRPS.getAsDouble())));
+    return startEnd(()->shooterMotor.setControl(shooterVelocityDrive.withVelocity(shooterRPS.getAsDouble())), ()->shooterMotor.set(0));
   }
 
   public Command cCoastShooter(){
