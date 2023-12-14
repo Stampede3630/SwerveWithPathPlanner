@@ -37,7 +37,7 @@ public class Intake extends SubsystemBase {
   public Command defaultRetractAndStop() {
     return Commands.sequence(
       runOnce(()->intakeSolenoid.set(Value.kReverse)),
-      startEnd(()->intakeDrive.set(0), null)
+      startEnd(()->intakeDrive.set(0), ()->{})
       );
   }
 
@@ -48,7 +48,7 @@ public class Intake extends SubsystemBase {
 
 
   public Command cSetIntakeSpeed(DoubleSubscriber inputSpeed){
-    return startEnd(()->intakeDrive.set(inputSpeed.getAsDouble()), null);
+    return startEnd(()->intakeDrive.set(inputSpeed.getAsDouble()), ()->{});
   }
 
   public Command cExtend(){

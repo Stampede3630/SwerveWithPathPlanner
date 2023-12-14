@@ -25,7 +25,9 @@ public class Indexer extends SubsystemBase implements Logged{
   private final TalonFX topMotor = new TalonFX(Constants.IndexTopMotorID);
   private Trigger topLimitSwitchTrigger;  
   private final DigitalInput bottomLimitSwitch = new DigitalInput(Constants.BottomIntakeSwitchID);
+  @LogNT
   boolean lockIndexer = false;
+  @LogNT
   boolean indexNow = false;
   
 
@@ -51,7 +53,9 @@ public class Indexer extends SubsystemBase implements Logged{
 
   public Command defaultSpinWhenNeeded(){
      return 
-        setTopBottomIndexer(-.4, -.4).onlyWhile(()->!lockIndexer && indexNow).repeatedly();
+        setTopBottomIndexer(-.1, -.1)
+        .onlyIf(()->!lockIndexer && indexNow)
+        .until(()->lockIndexer);
   }
 
   public Command setTopIndexer(double inputSpeed){
@@ -63,7 +67,8 @@ public class Indexer extends SubsystemBase implements Logged{
   }
 
   public Command setTopBottomIndexer(double topSpeed, double bottomSpeed){
-    return Commands.parallel(setTopIndexer(topSpeed), setBottomIndexer(bottomSpeed));
+    return startEnd(()->{bottomMotor.set(bottomSpeed); topMotor.set(topSpeed);},
+    ()->{bottomMotor.set(0); topMotor.set(0);});
   }
 
   public Command cSetNone(){

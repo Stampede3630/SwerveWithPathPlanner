@@ -78,6 +78,7 @@ public class RobotContainer implements Logged {
   public RobotContainer() {
     configureBindings();
     drivetrain.runOnce(() -> drivetrain.seedFieldRelative());
+    assembleOrchestra();
     dashboardIntakeSpeed.getTopic().publish(PubSubOption.pollStorage(1));
     dashboardReverseIntakeSpeed.getTopic().publish(PubSubOption.pollStorage(1));
     SmartDashboard.putData("Match Time", new Sendable() {
@@ -103,7 +104,12 @@ public class RobotContainer implements Logged {
         ).ignoringDisable(false).withName("DefaultDrive"));                   // Calculates requests during disabled
     intake.setDefaultCommand(intake.defaultRetractAndStop().withName("DefaultIntake"));
     indexer.setDefaultCommand(indexer.defaultSpinWhenNeeded().withName("DefaultIndexer"));
-    shooter.setDefaultCommand(shooter.setShooterRPS(()->40).onlyWhile(topLimitSwitchTrigger).withName("DefaultShooter").repeatedly());
+    shooter.setDefaultCommand(
+      shooter.setShooterRPS(()->40)
+        .onlyIf(topLimitSwitchTrigger)
+        .onlyWhile(topLimitSwitchTrigger)
+      .andThen(shooter.cCoastShooter()
+      .until(topLimitSwitchTrigger)).withName("DefaultShooter").repeatedly());
 
     //REVERSEINTAKE
     joystick.rightBumper().debounce(.1)
@@ -118,7 +124,7 @@ public class RobotContainer implements Logged {
       .whileTrue(
         Commands.parallel(
           intake.cExtendAndSetSpeed(dashboardIntakeSpeed),
-          indexer.setBottomIndexer(-.35)
+          indexer.setBottomIndexer(-.2)
             .unless(topLimitSwitchTrigger)
             .until(topLimitSwitchTrigger)
           ).withName("RightTriggerCommand")
@@ -128,32 +134,21 @@ public class RobotContainer implements Logged {
     joystick.leftTrigger(.5).debounce(.1)
       .whileTrue(
         Commands.sequence(
-          Commands.print("I'm shooting!"),
-          shooter.setShooterRPS(()->60),
-
-          Commands.either(
-            indexer.setTopBottomIndexer(-.5, -.5),
-            indexer.setTopBottomIndexer(0, 0),
-            shooter::getShooterAtSpeed)).repeatedly().withName("LeftTriggerCommand")
+          shooter.setShooterRPS(()->60).until(shooter::getShooterAtSpeed),
+          indexer.setTopBottomIndexer(-.5, -.5).onlyIf(topLimitSwitchTrigger).until(()->!indexer.getTopLimitSwitch())          
+          ).repeatedly().withName("LeftTriggerCommand")
           );
     
     //PLAY NEXT SONG
     joystick.a().debounce(.1)
-      .onTrue(
-        Commands.parallel(
-          Commands.runOnce(()->nextTrack()),
-          Commands.idle(
-            drivetrain,
-            shooter,
-            indexer,
-            intake
-          ).until(joystick.b()).withName("A Button: Play Next Song").ignoringDisable(true)));
+      .onTrue(Commands.runOnce(()->nextTrack()).andThen(playOrchestra())
+        );
     
     //Pause/Play
     joystick.b().debounce(.1)
       .onTrue(Commands.either(
         Commands.runOnce(()->pauseOrchestra()),
-        Commands.runOnce(()->playOrchestra()),
+        playOrchestra(),
         ()->THEOrchestra.isPlaying()
       ).withName("B Command: Pause or play"));
 
@@ -197,8 +192,14 @@ public class RobotContainer implements Logged {
   }
   
 
-  public void playOrchestra(){
-    THEOrchestra.play();
+  public Command playOrchestra(){
+    return 
+          Commands.startEnd(()->THEOrchestra.play(), ()->{},
+            drivetrain,
+            shooter,
+            indexer,
+            intake
+          ).until(joystick.b()).withName("A Button: Play Next Song");
   }
 
   public void pauseOrchestra(){
@@ -207,11 +208,10 @@ public class RobotContainer implements Logged {
 
   public void nextTrack(){
     currentSong++;
-    if (currentSong > orchestraPlayList.length-1) {
+    if (currentSong >= orchestraPlayList.length) {
       currentSong = 0;
     }
-
+    
     THEOrchestra.loadMusic(orchestraPlayList[currentSong]);
-    playOrchestra();
   }
 }

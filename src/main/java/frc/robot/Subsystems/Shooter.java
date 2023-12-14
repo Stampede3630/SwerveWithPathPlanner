@@ -84,8 +84,13 @@ public class Shooter extends SubsystemBase implements Logged {
   }
 
   public Command setShooterRPS(DoubleSupplier shooterRPS){
-    return startEnd(()->shooterMotor.setControl(shooterVelocityDrive.withVelocity(shooterRPS.getAsDouble())), ()->shooterMotor.set(0));
+    return startEnd(()->shooterMotor.setControl(shooterVelocityDrive.withVelocity(shooterRPS.getAsDouble())), ()->{});
   }
+
+  public Command spinupShooter(DoubleSupplier shooterRPS){
+    return runOnce(()->shooterMotor.setControl(shooterVelocityDrive.withVelocity(shooterRPS.getAsDouble())));
+  }
+
 
   public Command cCoastShooter(){
     return runOnce(()->shooterMotor.set(0));
@@ -94,6 +99,11 @@ public class Shooter extends SubsystemBase implements Logged {
   @LogNT
   public boolean getShooterAtSpeed(){
     return Math.abs(shooterMotor.getClosedLoopReference().getValueAsDouble()*0.95) <= Math.abs(shooterMotor.getVelocity().getValueAsDouble());
+  }
+
+  @LogNT
+  public double getShooterSpeed(){
+    return shooterMotor.getVelocity().getValueAsDouble();
   }
 
   public boolean checkHoodLimitSwitches(){
